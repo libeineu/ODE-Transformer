@@ -1,5 +1,5 @@
 # ODE Transformer: An Ordinary Differential Equation-Inspired Model for Sequence Generation
-This code is based on Fairseq v0.6.2
+This code is based on Fairseq v0.6.2. Note that the summarization task requires a newer version, e.g. Fairseq v0.10.2, we will release this code soon.
 ## Requirements and Installation
 - PyTorch version >= 1.2.0
 - python version >= 3.6  
@@ -214,7 +214,7 @@ data-bin/$data_dir \
 --no-repeat-ngram-size 3 \
 --remove-bpe
 
-python3 get_rouge.py --decodes_filename cnndm.test.target.tok --targets_filename $model_dir/hypo.sorted.tok
+python3 get_rouge.py --decodes_filename $model_dir/hypo.sorted.tok --targets_filename cnndm.test.target.tok
 ```
 
 ### For Grammatical Error Correction Task
