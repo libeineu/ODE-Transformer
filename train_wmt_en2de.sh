@@ -4,7 +4,7 @@ set -e
 #device=0
 device=0,1,2,3,4,5,6,7
 
-task=wmt-en2fr
+task=wmt-en2de
 # must set this tag
 tag=RK2-learnbale-layer12-Big-RPR
 
@@ -88,7 +88,6 @@ cmd="python3 -u train.py data-bin/$data_dir
   --update-freq $update_freq
   --rk-type learnable
   --enc-calculate-num 2
-  --dropout 0.1
   --no-progress-bar
   --log-interval 100
   --ddp-backend no_c10d 

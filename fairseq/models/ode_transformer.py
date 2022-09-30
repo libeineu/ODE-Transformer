@@ -114,12 +114,10 @@ class ODETransformerModel(FairseqModel):
 
 
         # RK parameters
-        parser.add_argument('--rk-type', choices=['standard', 'learnable', 'gated'],
+        parser.add_argument('--rk-type', choices=['standard', 'learnable', 'initialization'],
                             help='the computation manner for its RK block')
         parser.add_argument('--enc-calculate-num', type=int, default=1,
                             help='Number of calculations per encoder layer')
-        parser.add_argument('--dec-calculate-num', type=int, default=1,
-                            help='the order for RK-block of the decoder side')
 
     @classmethod
     def build_model(cls, args, task):
@@ -324,8 +322,16 @@ class ODETransformerEncoder(FairseqEncoder):
         if self.normalize:
             self.layer_norm = LayerNorm(embed_dim)
         self.calculate_num = args.enc_calculate_num
-        self.gate_linear = Linear(2 * embed_dim, 1)
         self.rk_type = args.rk_type
+         
+        if self.calculate_num == 2 and self.rk_type == "learnable":
+            # RK2-learnable
+            self.gate_linear = Linear(2 * embed_dim, 1)
+        elif self.calculate_num == 2 and self.rk_type == "initialization"
+            self.alpha = torch.nn.Parameter(torch.Tensor(self.calculate_num))
+            self.alpha.data.fill_(1)
+        else:
+            raise ValueError("invalid rk_type！")
 
         self.use_word_dropout = args.use_word_dropout
         self.word_dropout = args.word_dropout
@@ -393,6 +399,7 @@ class ODETransformerEncoder(FairseqEncoder):
                     x = residual + x
             if self.calculate_num == 4:
                 # RK4-block
+                assert self.rk_type == "standard"
                 x = residual + 1/6 * (runge_kutta_list[0] + 2*runge_kutta_list[1] + 2*runge_kutta_list[2] + runge_kutta_list[3])
                 # learnable alpha for RK4-block
                 #x = residual + self.alpha[0]*runge_kutta_list[0] + self.alpha[1]*runge_kutta_list[1] + self.alpha[2]*runge_kutta_list[2] + self.alpha[3]*runge_kutta_list[3]
@@ -401,12 +408,15 @@ class ODETransformerEncoder(FairseqEncoder):
                 x = residual + 1/6 * (runge_kutta_list[0] + 4*runge_kutta_list[1] + runge_kutta_list[2])
             elif self.calculate_num == 2:
                 # learnbale coefficients for RK2-block with gated
-                alpha = torch.sigmoid(self.gate_linear(torch.cat((runge_kutta_list[0], runge_kutta_list[1]), dim=-1)))
-                x = residual +  alpha * runge_kutta_list[0] + (1 - alpha) * runge_kutta_list[1]
-                # RK2-block
-                #x = residual + 1/2 * (runge_kutta_list[0] + runge_kutta_list[1])
+                if self.rk_type == "learnable":
+                    alpha = torch.sigmoid(self.gate_linear(torch.cat((runge_kutta_list[0], runge_kutta_list[1]), dim=-1)))
+                    x = residual +  alpha * runge_kutta_list[0] + (1 - alpha) * runge_kutta_list[1]
+                elif self.rk_type == "standard":
+                    # RK2-block
+                    x = residual + 1/2 * (runge_kutta_list[0] + runge_kutta_list[1])
+                elif self.rk_type == "initialization":
                 #learnable coefficients with initialized 1
-                #x = residual + self.alpha[0] * runge_kutta_list[0] + self.alpha[1] * runge_kutta_list[1]
+                    x = residual + self.alpha[0] * runge_kutta_list[0] + self.alpha[1] * runge_kutta_list[1]
             else:
                 raise ValueError("invalid caculate num！")
 
@@ -536,9 +546,6 @@ class ODETransformerDecoder(FairseqIncrementalDecoder):
         self.normalize = args.decoder_normalize_before and final_norm
         if self.normalize:
             self.layer_norm = LayerNorm(embed_dim)
-        self.calculate_num = getattr(args, 'dec_calculate_num', args.dec_calculate_num)
-        #self.gate_linear = Linear(2 * embed_dim, 1)
-
         self.use_word_dropout = args.use_word_dropout
         self.word_dropout = args.word_dropout
 
@@ -1035,7 +1042,6 @@ def base_architecture(args):
     args.decoder_integration_type = getattr(args, 'decoder_integration_type', 'avg')
     args.max_relative_length = getattr(args, 'max_relative_length', args.max_relative_length)
     args.enc_calculate_num = getattr(args, 'enc_calculate_num', 1)
-    args.dec_calculate_num = getattr(args, 'dec_calculate_num', 1)
     # choices of standard, learnable, gated
     args.rk_type = getattr(args, 'rk_type', 'standard')
 
@@ -1081,7 +1087,6 @@ def ode_relative_transformer_t2t_iwslt_de_en(args):
 def ode_transformer_wmt_en_de(args):
     args.encoder_history_type = getattr(args, 'encoder_history_type', 'learnable_dense')
     args.decoder_history_type = getattr(args, 'decoder_history_type', 'learnable_dense')
-    args.encoder_layers = 25
     base_architecture(args)
 
 
@@ -1093,9 +1098,9 @@ def ode_transformer_t2t_wmt_en_de(args):
     args.relu_dropout = getattr(args, 'relu_dropout', 0.1)
     args.encoder_history_type = getattr(args, 'encoder_history_type', 'learnable_dense')
     args.decoder_history_type = getattr(args, 'decoder_history_type', 'learnable_dense')
-    args.rk_type = "learnable"
-    args.encoder_layers = 6
-    args.enc_calculate_num = 2
+    args.rk_type = getattr(args, 'rk_type', 'learnbale')
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.enc_calculate_num = getattr(args, 'enc_calculate_num', 2)
     base_architecture(args)
 
 
