@@ -4,12 +4,12 @@ set -e
 #device=0
 device=0,1,2,3,4,5,6,7
 
-task=wmt-en2fr
+task=wmt-en2de
 # must set this tag
 tag=RK2-learnbale-layer12-Big-RPR
 
 if [ $task == "wmt-en2de" ]; then
-        arch=transformer_ode_t2t_wmt_en_de_big
+        arch=ode_relative_transformer_t2t_wmt_en_de_big
         share_embedding=1
         share_decoder_input_output_embed=0
         criterion=label_smoothed_cross_entropy
@@ -27,7 +27,7 @@ if [ $task == "wmt-en2de" ]; then
         src_lang=en
         tgt_lang=de
 elif [ $task == "wmt-en2ro" ]; then
-        arch=transformer_ode_t2t_wmt_en_de_big
+        arch=ode_relative_transformer_t2t_wmt_en_de_big
         share_embedding=0
         share_decoder_input_output_embed=1
         criterion=label_smoothed_cross_entropy
@@ -45,7 +45,7 @@ elif [ $task == "wmt-en2ro" ]; then
         src_lang=en
         tgt_lang=ro
 elif [ $task == "wmt-en2fr" ]; then
-        arch=transformer_ode_t2t_wmt_en_de_big
+        arch=ode_relative_transformer_t2t_wmt_en_de_big
         share_embedding=1
         share_decoder_input_output_embed=0
         criterion=label_smoothed_cross_entropy
@@ -88,6 +88,7 @@ cmd="python3 -u train.py data-bin/$data_dir
   --update-freq $update_freq
   --rk-type learnable
   --enc-calculate-num 2
+  --encoder-layers 12
   --dropout 0.1
   --no-progress-bar
   --log-interval 100
