@@ -546,6 +546,8 @@ class ODETransformerDecoder(FairseqIncrementalDecoder):
         self.normalize = args.decoder_normalize_before and final_norm
         if self.normalize:
             self.layer_norm = LayerNorm(embed_dim)
+        self.calculate_num = args.dec_calculate_num
+        assert self.calculate_num == 1
         self.use_word_dropout = args.use_word_dropout
         self.word_dropout = args.word_dropout
 
