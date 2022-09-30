@@ -1048,40 +1048,6 @@ def base_architecture(args):
     args.use_word_dropout = getattr(args, 'use_word_dropout', False)
     args.word_dropout = getattr(args, 'word_dropout', 0.8)
 
-@register_model_architecture('ode_transformer', 'ode_transformer_iwslt_de_en')
-def ode_transformer_iwslt_de_en(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 1024)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 512)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 1024)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 6)
-    args.encoder_history_type = getattr(args, 'encoder_history_type', 'learnable_dense')
-    args.decoder_history_type = getattr(args, 'decoder_history_type', 'learnable_dense')
-    base_architecture(args)
-
-
-@register_model_architecture('ode_transformer', 'ode_transformer_t2t_iwslt_de_en')
-def ode_transformer_t2t_iwslt_de_en(args):
-    args.encoder_normalize_before = getattr(args, 'encoder_normalize_before', True)
-    args.decoder_normalize_before = getattr(args, 'decoder_normalize_before', True)
-    args.attention_dropout = getattr(args, 'attention_dropout', 0.1)
-    args.relu_dropout = getattr(args, 'relu_dropout', 0.1)
-    args.dropout = getattr(args, 'dropout', 0.3)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    ode_transformer_iwslt_de_en(args)
-
-
-@register_model_architecture('ode_transformer', 'ode_relative_transformer_t2t_iwslt_de_en')
-def ode_relative_transformer_t2t_iwslt_de_en(args):
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.max_relative_length = 8
-    args.k_only = True
-    args.enc_calculate_num = 2
-    ode_transformer_t2t_iwslt_de_en(args)
-
 
 @register_model_architecture('ode_transformer', 'ode_transformer_wmt_en_de')
 def ode_transformer_wmt_en_de(args):
@@ -1102,14 +1068,6 @@ def ode_transformer_t2t_wmt_en_de(args):
     args.encoder_layers = getattr(args, 'encoder_layers', 6)
     args.enc_calculate_num = getattr(args, 'enc_calculate_num', 2)
     base_architecture(args)
-
-
-@register_model_architecture('ode_transformer', 'ode_relative_transformer_wmt_en_de')
-def ode_relative_transformer_wmt_en_de(args):
-    args.max_relative_length = 8
-    args.encoder_layers = 6
-    ode_transformer_wmt_en_de(args)
-
 
 @register_model_architecture('ode_transformer', 'ode_relative_transformer_t2t_wmt_en_de')
 def ode_relative_transformer_t2t_wmt_en_de(args):
